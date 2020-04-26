@@ -4,6 +4,10 @@ pub enum Direction {
     Down,
     Left,
     Right,
+    IdleUp,
+    IdleDown,
+    IdleLeft,
+    IdleRight,
 }
 
 impl Direction {

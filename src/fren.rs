@@ -1,14 +1,11 @@
 use crate::canvas::Canvas;
 use crate::direction::Direction;
 use crate::sprite::Sprite;
-use stdweb::unstable::TryInto;
-use stdweb::web::html_element::ImageElement;
-
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 struct Coordinates(u32, u32);
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Fren {
     position: Coordinates,
     height: u32,
@@ -41,7 +38,7 @@ impl Fren {
                 let new_position = match direction {
                     Direction::Up => Coordinates(
                         self.position.0 % self.width,
-                        self.position.1.checked_sub(1).unwrap_or(self.height - self.speed) % self.height,
+                        (self.position.1.checked_sub(1).unwrap_or(self.height - self.speed)-1) % self.height,
                     ),
                     Direction::Down => Coordinates(
                         self.position.0 % self.width,
@@ -52,9 +49,13 @@ impl Fren {
                         self.position.1 % self.height,
                     ),
                     Direction::Left => Coordinates(
-                        (self.position.0.checked_sub(1).unwrap_or(self.width - self.speed)) % self.width,
+                        (self.position.0.checked_sub(1).unwrap_or(self.width - self.speed)-1) % self.width,
                         (self.position.1) % self.height,
                     ),
+                    Direction::IdleUp |
+                    Direction::IdleDown |
+                    Direction:: IdleLeft |
+                    Direction:: IdleRight => {Coordinates(self.position.0, self.position.1)},
                 };
 
                 self.position = new_position;
@@ -64,23 +65,6 @@ impl Fren {
     }
 
     pub fn draw(&self, canvas: &Canvas, frame: u8) {
-        canvas.clear_all();
-        let sprite = ImageElement::new();
-        let direction = self.direction;
-        match direction{
-            Some(direction) => {
-                match direction{
-                    Direction::Up => sprite.set_src(&self.sprite.up.src()),
-                    Direction::Down => sprite.set_src(&self.sprite.down.src()),
-                    Direction::Left => sprite.set_src(&self.sprite.left.src()),
-                    Direction::Right => sprite.set_src(&self.sprite.right.src()),
-                }
-            },
-            None => {
-                sprite.set_src(&self.sprite.idle.src());
-                js! { console.log(@{sprite.src()}) }
-            },
-        }
-        canvas.draw(self.position.0, self.position.1, sprite, frame);
+        canvas.draw_sprite(self.position.0, self.position.1, &self.sprite, &self.direction, frame);
     }
 }
